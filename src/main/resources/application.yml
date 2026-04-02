@@ -6,14 +6,20 @@
 # management.endpoints.web.exposure.include=*
 #endpoint.health.show-details=always
 spring:
-application:
-name: ecom-application
-  @@ -14,4 +16,29 @@
-jpa:
-show-sql: true
-hibernate:
-  ddl-auto: create
+  application:
+    name: ecom-application
 
+  datasource:
+    url: jdbc:postgresql://localhost:5432/embarkx
+    username: embarkx
+    password: embarkx
+
+  jpa:
+    database: POSTGRESQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
 
 management:
   endpoints:
