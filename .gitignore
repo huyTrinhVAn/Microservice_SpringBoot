@@ -1,0 +1,51 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.env
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+secrets/
+
+# Local Spring Boot config overrides
+application-local.yml
+application-local.yaml
+application-local.properties
+bootstrap-local.yml
+bootstrap-local.yaml
+bootstrap-local.properties
+
+# Build output
+target/
+build/
+out/
+
+# Logs
+logs/
+*.log
+
+# Maven and Gradle local files
+.mvn/wrapper/maven-wrapper.jar
+.gradle/
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+.factorypath
+.apt_generated/
+.springBeans
+.sts4-cache/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,4 +1,5 @@
 package com.ecommerce.order.dtos;
 
-public class UserRole {
+public enum UserRole {
+    CUSTOMER, ADMIN
 }
