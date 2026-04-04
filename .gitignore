@@ -24,8 +24,8 @@ build/
 out/
 
 # Logs
-logs/
-*.log
+logs
+**/logs
 
 # Maven and Gradle local files
 .mvn/wrapper/maven-wrapper.jar

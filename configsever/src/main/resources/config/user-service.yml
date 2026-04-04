@@ -21,6 +21,8 @@ management:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
 eureka:
+  instance:
+    prefer-ip-address: true
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
