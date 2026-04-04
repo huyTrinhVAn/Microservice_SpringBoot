@@ -1,10 +1,20 @@
 spring:
   application:
     name: notification
-  rabbitmq:
-    addresses: ${RABBITMQ_URL}
-    connection-timeout: 30000
-
+  cloud:
+    function:
+      definition: orderCreated
+    stream:
+      function:
+        definition: orderCreated
+      bindings:
+        orderCreated-in-0:
+          destination: order.exchange
+          group: notification-group
+          content-type: application/json
+      kafka:
+        binder:
+          brokers: localhost:9092
 server:
   port:
     8084
