@@ -4,10 +4,8 @@ spring:
   profiles:
     active: native
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
+    addresses: ${RABBITMQ_URL}
+    connection-timeout: 30000
   cloud:
     config:
       server:

@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: notification
+  rabbitmq:
+    addresses: ${RABBITMQ_URL}
+    connection-timeout: 30000
+
+server:
+  port:
+    8084
+
+
+rabbitmq:
+  exchange:
+    name: order.exchange
+  queue:
+    name: order.queue
+  routing:
+    key: order.tracking
