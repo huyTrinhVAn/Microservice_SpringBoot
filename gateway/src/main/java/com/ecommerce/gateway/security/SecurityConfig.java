@@ -13,12 +13,17 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
+
+    private static final String CLIENT_ID = "oauth2-pkce";
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
@@ -39,11 +44,9 @@ public class SecurityConfig {
         ReactiveJwtAuthenticationConverter jwtAuthenticationConverter =
                 new ReactiveJwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            List<String> roles = jwt.getClaimAsMap("resource_access")
-                    .entrySet().stream()
-                    .filter(entry -> entry.getKey().equals("oauth2-pkce"))
-                    .flatMap(entry -> ((Map<String, List<String>>) entry.getValue())
-                            .get("roles").stream())
+            Object resourceAccessClaim = jwt.getClaims().get("resource_access");
+
+            List<String> roles = extractClientRoles(resourceAccessClaim)
                     .toList();
 
             System.out.println("Extracted Roles: " + roles);
@@ -53,5 +56,26 @@ public class SecurityConfig {
 
         });
         return jwtAuthenticationConverter;
+    }
+
+    private Stream<String> extractClientRoles(Object resourceAccessClaim) {
+        if (!(resourceAccessClaim instanceof Map<?, ?> resourceAccess)) {
+            return Stream.empty();
+        }
+
+        Object clientAccess = resourceAccess.get(CLIENT_ID);
+        if (!(clientAccess instanceof Map<?, ?> clientAccessMap)) {
+            return Stream.empty();
+        }
+
+        Object roles = clientAccessMap.get("roles");
+        if (!(roles instanceof Collection<?> roleCollection)) {
+            return Stream.empty();
+        }
+
+        return roleCollection.stream()
+                .filter(Objects::nonNull)
+                .map(String::valueOf)
+                .filter(role -> !role.isBlank());
     }
 }
