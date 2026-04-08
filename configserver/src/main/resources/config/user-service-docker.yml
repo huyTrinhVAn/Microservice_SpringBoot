@@ -1,0 +1,46 @@
+spring:
+  data:
+    mongodb:
+      uri: ${MONGO_URL}
+      database: ecom_user
+  rabbitmq:
+    addresses: ${RABBITMQ_URL}
+    connection-timeout: 30000
+
+server:
+  port: 8082
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  tracing:
+    sampling:
+      probability: 1.0
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+logging:
+  file:
+    name: logs/${spring.application.name}.log
+  logback:
+    rollingpolicy:
+      max-file-size: 5MB
+      max-history: 7
+
+
+# KEYCLOAK
+keycloak:
+  admin:
+    username: user
+    password: user
+    server-url: http://keycloak:8080
+    realm: ecom-app
+    client-id: admin-cli
+    client-uid: badb78e2-a572-470d-82a3-89ab440aa8a7

@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: configserver
+  profiles:
+    active: native
+  rabbitmq:
+    addresses: ${RABBITMQ_URL:amqp://guest:guest@localhost:5672}
+    connection-timeout: 30000
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: file:./src/main/resources/config
+server:
+  port: ${SERVER_PORT:8889}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"

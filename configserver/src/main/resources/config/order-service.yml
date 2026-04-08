@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/order
+    url: jdbc:postgresql://postgres:5432/order
     username: ${DB_USER}
     password: ${DB_PASSWORD}
   cloud:
@@ -11,7 +11,7 @@ spring:
           content-type: application/json
       kafka:
         binder:
-          brokers: localhost:9092
+          brokers: kafka:9092
   jpa:
     database: POSTGRESQL
     show-sql: true

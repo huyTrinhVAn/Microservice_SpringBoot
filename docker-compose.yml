@@ -1,6 +1,6 @@
 services:
   postgres:
-    container_name: postgres_container
+    container_name: postgres
     image: postgres:14
     environment:
       POSTGRES_USER: embarkx
@@ -8,6 +8,7 @@ services:
       PGDATA: /data/postgres
     volumes:
       - postgres:/data/postgres
+      - ./init-multi-db.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     networks:
@@ -37,6 +38,8 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
     command: [ "start-dev" ]
+    volumes:
+      - keycloak_data:/opt/keycloak/data
     networks:
       - backend
 
@@ -67,12 +70,14 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
     networks:
       - backend
   rabbitmq:
-    container_name: rabbitmq_container
+    container_name: rabbitmq
     image: rabbitmq:3-management
     environment:
       RABBITMQ_DEFAULT_USER: guest
@@ -93,6 +98,145 @@ services:
     networks:
       - backend
 
+  config-server:
+    build: ./configserver
+    container_name: config-server
+    ports:
+      - 8888:8888
+    networks:
+      - backend
+    environment:
+      - SERVER_PORT=8888
+      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=/config
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    volumes:
+      - ./configserver/src/main/resources/config:/config
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  eureka:
+    build: ./eureka
+    container_name: eureka
+    ports:
+      - 8761:8761
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway-service:
+    build: ./gateway
+    container_name: gateway
+    ports:
+      - 8080:8080
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      eureka:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    networks:
+      - backend
+
+  user-service:
+    build: ./user
+    container_name: user-service
+    ports:
+      - 8082:8082
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - MONGO_URL=${MONGO_URL}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    depends_on:
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      eureka:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    networks:
+      - backend
+
+  product-service:
+    build: ./product
+    container_name: product-service
+    ports:
+      - 8081:8081
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    depends_on:
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      eureka:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    networks:
+      - backend
+
+  order-service:
+    build: ./order
+    container_name: order-service
+    ports:
+      - 8083:8083
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - RABBITMQ_URL=${RABBITMQ_URL}
+    depends_on:
+      mongo:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      eureka:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    networks:
+      - backend
+  notification-service:
+    build: ./notification
+    container_name: notification-service
+    #    mem_limit: 700m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - mongo
+      - rabbitmq
+      - eureka
+      - keycloak
+      - config-server
+    networks:
+      - backend
+    restart: on-failure
+
 networks:
   backend:
     driver: bridge
@@ -100,3 +244,4 @@ networks:
 volumes:
   postgres:
   pgadmin:
+  keycloak_data:
